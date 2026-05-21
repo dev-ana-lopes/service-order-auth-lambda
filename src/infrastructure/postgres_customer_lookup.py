@@ -4,7 +4,10 @@ import os
 
 import psycopg
 
-from ..application.authenticate_customer_by_cpf import CustomerRecord
+try:
+    from application.authenticate_customer_by_cpf import CustomerRecord
+except ImportError:
+    from ..application.authenticate_customer_by_cpf import CustomerRecord
 
 _CONNECTION = None
 

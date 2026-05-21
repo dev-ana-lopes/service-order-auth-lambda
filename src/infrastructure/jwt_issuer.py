@@ -24,7 +24,9 @@ class JwtIssuer:
         )
 
     def issue_token(self, *, cpf: str, customer_id: str) -> str:
-        expires_at = datetime.now(timezone.utc) + timedelta(minutes=self.expiration_minutes)
+        expires_at = datetime.now(timezone.utc) + timedelta(
+            minutes=self.expiration_minutes
+        )
         payload = {
             "sub": cpf,
             "customer_id": customer_id,

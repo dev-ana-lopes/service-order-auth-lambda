@@ -1,0 +1,7 @@
+aws_region = "us-east-1"
+project_name = "service-order"
+
+database_url = "postgresql://service_order_user:change-me@db.example.com:5432/service_order_db"
+customer_jwt_secret = "change-me-with-at-least-32-characters"
+customer_jwt_issuer = "service-order-auth-lambda/production"
+backend_base_url = "http://example-k3s-backend"

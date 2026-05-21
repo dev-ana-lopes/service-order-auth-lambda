@@ -2,10 +2,14 @@ from __future__ import annotations
 
 import json
 
-from .application.authenticate_customer_by_cpf import AuthenticateCustomerByCpf
-from .infrastructure.jwt_issuer import JwtIssuer
-from .infrastructure.postgres_customer_lookup import PostgresCustomerLookup
-
+try:
+    from application.authenticate_customer_by_cpf import AuthenticateCustomerByCpf
+    from infrastructure.jwt_issuer import JwtIssuer
+    from infrastructure.postgres_customer_lookup import PostgresCustomerLookup
+except ImportError:
+    from .application.authenticate_customer_by_cpf import AuthenticateCustomerByCpf
+    from .infrastructure.jwt_issuer import JwtIssuer
+    from .infrastructure.postgres_customer_lookup import PostgresCustomerLookup
 
 
 def _response(status_code: int, body: dict) -> dict:
@@ -16,12 +20,14 @@ def _response(status_code: int, body: dict) -> dict:
     }
 
 
-
 def lambda_handler(event, context):
     del context
     body = event.get("body") or "{}"
     if isinstance(body, str):
-        payload = json.loads(body)
+        try:
+            payload = json.loads(body)
+        except json.JSONDecodeError:
+            return _response(400, {"detail": "Invalid JSON body"})
     else:
         payload = body
 

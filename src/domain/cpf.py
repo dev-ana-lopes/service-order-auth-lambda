@@ -5,7 +5,6 @@ def normalize_cpf(value: str) -> str:
     return re.sub(r"\D", "", value or "")
 
 
-
 def is_valid_cpf(value: str) -> bool:
     cpf = normalize_cpf(value)
     if len(cpf) != 11 or cpf == cpf[0] * 11:

@@ -4,7 +4,10 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Protocol
 
-from ..domain.cpf import is_valid_cpf, normalize_cpf
+try:
+    from domain.cpf import is_valid_cpf, normalize_cpf
+except ImportError:
+    from ..domain.cpf import is_valid_cpf, normalize_cpf
 
 
 @dataclass(frozen=True)
@@ -32,16 +35,18 @@ class AuthenticateCustomerByCpf:
     def execute(self, cpf: str) -> dict:
         normalized = normalize_cpf(cpf)
         if not is_valid_cpf(normalized):
-            return {"statusCode": 422, "body": {"detail": "Invalid CPF"}}
+            return {"statusCode": 400, "body": {"detail": "Invalid CPF"}}
 
         customer = self.customer_lookup.get_by_cpf(normalized)
         if customer is None:
             return {"statusCode": 404, "body": {"detail": "Customer not found"}}
 
         if not customer.is_active:
-            return {"statusCode": 401, "body": {"detail": "Customer is inactive"}}
+            return {"statusCode": 403, "body": {"detail": "Customer is inactive"}}
 
-        token = self.jwt_issuer.issue_token(cpf=normalized, customer_id=customer.customer_id)
+        token = self.jwt_issuer.issue_token(
+            cpf=normalized, customer_id=customer.customer_id
+        )
         return {
             "statusCode": 200,
             "body": {

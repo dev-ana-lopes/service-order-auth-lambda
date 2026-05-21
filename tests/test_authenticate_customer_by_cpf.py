@@ -18,10 +18,10 @@ class FakeLookup:
         return self.customer
 
 
-def test_invalid_cpf_returns_422():
+def test_invalid_cpf_returns_400():
     use_case = AuthenticateCustomerByCpf(FakeLookup(), JwtIssuer(secret="secret" * 8))
     result = use_case.execute("123")
-    assert result["statusCode"] == 422
+    assert result["statusCode"] == 400
 
 
 def test_customer_not_found_returns_404():
@@ -30,13 +30,13 @@ def test_customer_not_found_returns_404():
     assert result["statusCode"] == 404
 
 
-def test_inactive_customer_returns_401():
+def test_inactive_customer_returns_403():
     use_case = AuthenticateCustomerByCpf(
         FakeLookup(CustomerRecord(customer_id="1", cpf="11144477735", is_active=False)),
         JwtIssuer(secret="secret" * 8),
     )
     result = use_case.execute("11144477735")
-    assert result["statusCode"] == 401
+    assert result["statusCode"] == 403
 
 
 def test_active_customer_returns_token():
@@ -58,7 +58,9 @@ def test_active_customer_returns_token():
 def test_lambda_handler_wraps_json_response(monkeypatch):
     monkeypatch.setattr(
         "src.handler.PostgresCustomerLookup",
-        lambda: FakeLookup(CustomerRecord(customer_id="1", cpf="11144477735", is_active=True)),
+        lambda: FakeLookup(
+            CustomerRecord(customer_id="1", cpf="11144477735", is_active=True)
+        ),
     )
     monkeypatch.setattr(
         "src.handler.JwtIssuer",

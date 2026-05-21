@@ -18,12 +18,12 @@ provider "aws" {
 
 resource "archive_file" "lambda_zip" {
   type        = "zip"
-  source_dir  = "${path.module}/../src"
-  output_path = "${path.module}/lambda.zip"
+  source_dir  = "${path.module}/../build/lambda-package"
+  output_path = "${path.module}/../build/lambda.zip"
 }
 
 resource "aws_iam_role" "lambda" {
-  name               = "service-order-auth-lambda-role"
+  name               = "${var.project_name}-auth-lambda-role"
   assume_role_policy = data.aws_iam_policy_document.lambda_assume.json
 }
 
@@ -43,7 +43,7 @@ resource "aws_iam_role_policy_attachment" "basic" {
 }
 
 resource "aws_lambda_function" "auth" {
-  function_name    = "service-order-auth-cpf"
+  function_name    = "${var.project_name}-auth-cpf"
   role             = aws_iam_role.lambda.arn
   handler          = "handler.lambda_handler"
   runtime          = "python3.12"
@@ -67,7 +67,7 @@ resource "aws_cloudwatch_log_group" "auth" {
 }
 
 resource "aws_apigatewayv2_api" "gateway" {
-  name          = "service-order-phase3-http-api"
+  name          = "${var.project_name}-phase3-http-api"
   protocol_type = "HTTP"
 }
 
@@ -110,8 +110,4 @@ resource "aws_apigatewayv2_stage" "default" {
   api_id      = aws_apigatewayv2_api.gateway.id
   name        = "$default"
   auto_deploy = true
-}
-
-output "api_gateway_url" {
-  value = aws_apigatewayv2_api.gateway.api_endpoint
 }

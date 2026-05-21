@@ -1,6 +1,11 @@
 variable "aws_region" {
   type    = string
-  default = "sa-east-1"
+  default = "us-east-1"
+}
+
+variable "project_name" {
+  type    = string
+  default = "service-order"
 }
 
 variable "database_url" {

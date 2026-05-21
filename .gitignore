@@ -1,5 +1,15 @@
 .terraform/
-*.tfstate
-*.tfstate.*
+.env
+.env.*
+terraform.tfstate
+terraform.tfstate.*
 terraform.tfvars
+*.tfvars
+!terraform.tfvars.example
+*.zip
+build/
+dist/
+crash.log
+override.tf
+*_override.tf
 __pycache__/
