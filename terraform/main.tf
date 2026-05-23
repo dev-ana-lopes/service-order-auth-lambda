@@ -22,11 +22,6 @@ resource "archive_file" "lambda_zip" {
   output_path = "${path.module}/../build/lambda.zip"
 }
 
-resource "aws_iam_role" "lambda" {
-  name               = "${var.project_name}-auth-lambda-role"
-  assume_role_policy = data.aws_iam_policy_document.lambda_assume.json
-}
-
 data "aws_iam_policy_document" "lambda_assume" {
   statement {
     actions = ["sts:AssumeRole"]
@@ -37,16 +32,15 @@ data "aws_iam_policy_document" "lambda_assume" {
   }
 }
 
-resource "aws_iam_role_policy_attachment" "basic" {
-  role       = aws_iam_role.lambda.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+data "aws_iam_role" "lambda" {
+  name = "LabRole"
 }
 
 resource "aws_lambda_function" "auth" {
   function_name    = "${var.project_name}-auth-cpf"
-  role             = aws_iam_role.lambda.arn
+  role             = data.aws_iam_role.lambda.arn
   handler          = "handler.lambda_handler"
-  runtime          = "python3.12"
+  runtime          = "python3.10"
   filename         = archive_file.lambda_zip.output_path
   source_code_hash = archive_file.lambda_zip.output_base64sha256
   timeout          = 10
