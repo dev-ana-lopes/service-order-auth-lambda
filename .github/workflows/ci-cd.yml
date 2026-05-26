@@ -40,6 +40,9 @@ jobs:
       - name: Package Lambda artifact
         run: bash scripts/package_lambda.sh
 
+      - name: Validate Lambda artifact
+        run: bash scripts/validate_lambda_package.sh
+
       - uses: hashicorp/setup-terraform@v3
 
       - name: Terraform init
@@ -56,7 +59,9 @@ jobs:
           terraform -chdir=terraform plan -input=false \
             -var="database_url=postgresql://user:pass@example.com:5432/db?sslmode=require" \
             -var="customer_jwt_secret=fake-secret-value-with-32-characters" \
-            -var="backend_base_url=https://backend.example.com" || true
+            -var="backend_base_url=https://backend.example.com" \
+            -var='private_subnet_ids=["subnet-00000000000000000","subnet-11111111111111111"]' \
+            -var='lambda_security_group_ids=["sg-00000000000000000"]' || true
 
   deploy:
     if: github.event_name == 'workflow_dispatch'
@@ -68,7 +73,9 @@ jobs:
       - name: Explain AWS Academy Lambda deployment limitation
         run: |
           echo "The Lambda deployment is intentionally not executed in this AWS Academy/Vocareum environment."
-          echo "During validation, lambda:CreateFunction returned implicitDeny for the lab role."
-          echo "The repository keeps the Lambda implementation, tests, packaging and Terraform validation ready."
-          echo "To deploy this function in a regular AWS account, configure AWS credentials and enable terraform apply."
+          echo "Terraform/CLI creation hit a lab permission limitation, so service-order-auth-cpf was created manually in the AWS Console with LabRole."
+          echo "The repository generated build/lambda.zip and the artifact was uploaded to the existing Lambda with AWS CLI."
+          echo "The Terraform plan step remains non-blocking because real resources are manual and not imported into remote state."
+          echo "The repository keeps implementation, tests, packaging and Terraform validation ready."
+          echo "For a regular AWS account, configure a remote Terraform backend, import existing resources if needed, grant the CI role proper permissions and then enable terraform apply."
           echo "Evidence is documented in docs/runbooks/aws-academy-lambda-limitation.md."

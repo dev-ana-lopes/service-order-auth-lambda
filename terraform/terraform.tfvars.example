@@ -5,3 +5,5 @@ database_url = "postgresql://service_order_user:change-me@db.example.com:5432/se
 customer_jwt_secret = "change-me-with-at-least-32-characters"
 customer_jwt_issuer = "service-order-auth-lambda/production"
 backend_base_url = "http://example-k3s-backend"
+private_subnet_ids = ["subnet-xxxx", "subnet-yyyy"]
+lambda_security_group_ids = ["sg-xxxx"]

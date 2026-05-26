@@ -1,38 +1,76 @@
-# AWS Academy Lambda limitation
+# AWS Academy Lambda Limitation and Workaround
 
-During the Phase 3 deployment validation, the serverless authentication
-function could not be provisioned in the AWS Academy/Vocareum account because
-the current lab role does not allow creating AWS Lambda functions.
+## Context
 
-Validated command:
+During Phase 3 validation, automated Lambda creation through Terraform/CLI hit
+an AWS Academy/Vocareum permission limitation. This does not mean the Lambda
+could not exist. It means automated creation/apply was not a reliable path in
+the lab account.
+
+The validated Lambda is `service-order-auth-cpf`.
+
+## Validated Workaround
+
+The function was created manually in the AWS Console using `LabRole`. The code
+still belongs to this repository and was packaged locally:
 
 ```bash
-aws iam simulate-principal-policy \
-  --policy-source-arn arn:aws:iam::<account-id>:role/voclabs \
-  --action-names lambda:CreateFunction \
-  --resource-arns arn:aws:lambda:us-east-1:<account-id>:function:service-order-auth-cpf
+bash scripts/package_lambda.sh
+bash scripts/validate_lambda_package.sh
 ```
 
-Result:
+The generated artifact was uploaded to the existing function:
 
-```text
-EvalActionName: lambda:CreateFunction
-EvalDecision: implicitDeny
+```bash
+aws lambda update-function-code \
+  --function-name service-order-auth-cpf \
+  --zip-file fileb://build/lambda.zip
 ```
 
-Impact:
+The function configuration was validated with:
 
-- Terraform can package the Lambda artifact.
-- Terraform can validate the infrastructure code.
-- API Gateway resources may be created.
-- The Lambda function itself cannot be created in this AWS Academy lab.
+- Runtime: `python3.12`
+- Handler: `handler.lambda_handler`
+- Timeout: `15`
+- API Gateway route: `POST /auth/cpf`
 
-Because of that, the full serverless authorizer deployment is blocked by
-the educational account policy, not by application code.
+## VPC Requirement
 
-Mitigation for the academic demo:
+The Lambda timed out until it was associated with the RDS VPC. VPC attachment
+is a separate manual/CLI operation and is not run by the repository deploy
+script.
 
-- Keep the Lambda repository implemented, tested and validated.
-- Keep Terraform code ready for an AWS account with Lambda permissions.
-- Demonstrate the main application running on k3s with RDS.
-- Document the intended architecture with API Gateway and Lambda Authorizer.
+Validated values:
+
+- VPC: `vpc-0580753919a62d7fa`
+- Subnets: `subnet-0302bdc34eae65f23`, `subnet-0460a707dc631d61b`
+- Security group: `sg-04838be5e46479e77`
+
+Validated command shape:
+
+```bash
+aws lambda update-function-configuration \
+  --function-name service-order-auth-cpf \
+  --vpc-config SubnetIds=subnet-0302bdc34eae65f23,subnet-0460a707dc631d61b,SecurityGroupIds=sg-04838be5e46479e77
+```
+
+The RDS security group must allow this Lambda security group on port `5432`.
+
+## Terraform Status
+
+Terraform remains a reference IaC implementation for a regular AWS account or
+for a future import of the manually created resources into remote state. In the
+AWS Academy lab, `terraform apply` stays disabled.
+
+The CI validates Terraform syntax and keeps `terraform plan` non-blocking with
+fake values because the real resources are manual and not imported into remote
+state.
+
+## What This Repository Provides
+
+- CPF authentication Lambda implementation.
+- Unit tests for business behavior.
+- Package and package validation scripts.
+- Manual deploy script for an existing Lambda.
+- Reference Terraform for Lambda/API Gateway/VPC configuration.
+- Runbooks for manual validation in AWS Academy.

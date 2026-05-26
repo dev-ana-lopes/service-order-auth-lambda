@@ -40,10 +40,10 @@ resource "aws_lambda_function" "auth" {
   function_name    = "${var.project_name}-auth-cpf"
   role             = data.aws_iam_role.lambda.arn
   handler          = "handler.lambda_handler"
-  runtime          = "python3.10"
+  runtime          = "python3.12"
   filename         = archive_file.lambda_zip.output_path
   source_code_hash = archive_file.lambda_zip.output_base64sha256
-  timeout          = 10
+  timeout          = 15
 
   environment {
     variables = {
@@ -52,6 +52,11 @@ resource "aws_lambda_function" "auth" {
       CUSTOMER_JWT_ISSUER    = var.customer_jwt_issuer
       CUSTOMER_JWT_ALGORITHM = "HS256"
     }
+  }
+
+  vpc_config {
+    subnet_ids         = var.private_subnet_ids
+    security_group_ids = var.lambda_security_group_ids
   }
 }
 
